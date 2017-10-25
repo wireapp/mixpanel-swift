@@ -17,10 +17,12 @@ func += <K, V> (left: inout [K:V], right: [K:V]) {
 class Track {
     let apiToken: String
     let lock: ReadWriteLock
-    
-    init(apiToken: String, lock: ReadWriteLock) {
+    let metadata: SessionMetadata
+
+    init(apiToken: String, lock: ReadWriteLock, metadata: SessionMetadata) {
         self.apiToken = apiToken
         self.lock = lock
+        self.metadata = metadata
     }
 
     func track(event: String?,
@@ -55,7 +57,8 @@ class Track {
             p += properties
         }
 
-        let trackEvent: InternalProperties = ["event": ev!, "properties": p]
+        var trackEvent: InternalProperties = ["event": ev!, "properties": p]
+        metadata.toDict().forEach { (k,v) in trackEvent[k] = v }
         
         self.lock.write {
             eventsQueue.append(trackEvent)
